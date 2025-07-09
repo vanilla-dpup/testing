@@ -8,7 +8,7 @@ on:
       - main
 
 jobs:
-  labwc:
+  full:
     uses: vanilla-dpup/woof-CE/.github/workflows/build.yml@vanilladpup-11.0.x
     with:
       repo: vanilla-dpup/woof-CE
@@ -20,9 +20,9 @@ jobs:
       compat-distro-version: testing64
       kernel: debian-testing
       prefix: vanilladpup
-      artifact: vanilladpup-x86_64-11.0.${{ github.run_number }}-labwc
+      artifact: vanilladpup-x86_64-11.0.${{ github.run_number }}-full
       retention: 1
-  dwl:
+  mini:
     uses: vanilla-dpup/woof-CE/.github/workflows/build.yml@vanilladpup-11.0.x
     with:
       repo: vanilla-dpup/woof-CE
@@ -34,9 +34,9 @@ jobs:
       compat-distro-version: testing64
       kernel: debian-testing
       prefix: vanilladpup
-      artifact: vanilladpup-x86_64-11.0.${{ github.run_number }}-dwl
+      artifact: vanilladpup-x86_64-11.0.${{ github.run_number }}-mini
       retention: 1
-      variant: dwl
+      variant: mini
   barebones:
     uses: vanilla-dpup/woof-CE/.github/workflows/build.yml@vanilladpup-11.0.x
     with:
@@ -52,48 +52,28 @@ jobs:
       artifact: vanilladpup-x86_64-11.0.${{ github.run_number }}-barebones
       retention: 1
       variant: barebones
-  retro:
-    uses: vanilla-dpup/woof-CE/.github/workflows/build.yml@vanilladpup-11.0.x
-    with:
-      repo: vanilla-dpup/woof-CE
-      ref: vanilladpup-11.0.x
-      name: "Vanilla Dpup"
-      version: 11.0.${{ github.run_number }}
-      arch: x86_64
-      compat-distro: debian
-      compat-distro-version: bookworm64
-      kernel: debian-bookworm
-      prefix: vanilladpup
-      artifact: vanilladpup-x86_64-11.0.${{ github.run_number }}-retro
-      retention: 1
-      variant: labwc
   upload:
-    needs: [labwc, dwl, barebones, retro]
+    needs: [full, mini, barebones]
     runs-on: ubuntu-24.04
     steps:
-      - name: Download labwc build artifact
+      - name: Download full build artifact
         uses: actions/download-artifact@v4
         with:
-          name: vanilladpup-x86_64-11.0.${{ github.run_number }}-labwc
-          path: labwc
-      - name: Download dwl build artifact
+          name: vanilladpup-x86_64-11.0.${{ github.run_number }}-full
+          path: full
+      - name: Download mini build artifact
         uses: actions/download-artifact@v4
         with:
-          name: vanilladpup-x86_64-11.0.${{ github.run_number }}-dwl
-          path: dwl
+          name: vanilladpup-x86_64-11.0.${{ github.run_number }}-mini
+          path: mini
       - name: Download barebones build artifact
         uses: actions/download-artifact@v4
         with:
           name: vanilladpup-x86_64-11.0.${{ github.run_number }}-barebones
           path: barebones
-      - name: Download retro build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: vanilladpup-x86_64-11.0.${{ github.run_number }}-retro
-          path: retro
       - name: Rename files
         run: |
-          for x in labwc dwl barebones retro; do
+          for x in full mini barebones; do
               mv -f $x/*-bios.img.gz vanilladpup-11.0.${{ github.run_number }}-$x-bios.img.gz || exit 1
               mv -f $x/*-uefi.img.gz vanilladpup-11.0.${{ github.run_number }}-$x-uefi.img.gz || exit 1
               mv -f $x/woof-CE.tar.gz woof-CE-$x.tar.gz || exit 1
